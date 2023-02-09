@@ -132,13 +132,15 @@ class Bot:
         xx, yy = obj.getLocation()
         return math.sqrt(math.pow(self.x - xx, 2) + math.pow(self.y - yy, 2))
 
-    def collectDirt(self, canvas, registryPassives):
+    def collectDirt(self, canvas, registryPassives, count):
         toDelete = []
+
         for idx, rr in enumerate(registryPassives):
             if isinstance(rr, Dirt):
                 if self.distanceTo(rr) < 30:
                     canvas.delete(rr.name)
                     toDelete.append(idx)
+                    count.itemCollected(canvas)
         for ii in sorted(toDelete, reverse=True):
             del registryPassives[ii]
         return registryPassives
@@ -175,6 +177,15 @@ class Bot:
         if chargerL + chargerR > 200 and self.battery < 1000:
             self.vl = 0.0
             self.vr = 0.0
+
+class Counter:
+    def __init__(self, canvas):
+        self.dirtCollected = 0
+        self.canvas = canvas
+        self.canvas.create_text(70,50,text="Dirt Collected:"+str(self.dirtCollected))
+
+    def itemCollected(self, canvas):
+        self.dirtCollected += 1
 
 
 class Charger:
@@ -237,6 +248,7 @@ def initialise(window):
 
 
 def register(canvas):
+    count = Counter(canvas)
     registryActives = []
     registryPassives = []
     noOfBots = 1
@@ -259,23 +271,24 @@ def register(canvas):
         registryPassives.append(dirt)
         dirt.draw(canvas)
     canvas.bind("<Button-1>", lambda event: buttonClicked(event.x, event.y, registryActives))
-    return registryActives, registryPassives
+    return registryActives, registryPassives, count
 
 
-def moveIt(canvas, registryActives, registryPassives):
+def moveIt(canvas, registryActives, registryPassives, count):
     for rr in registryActives:
         chargerIntensityL, chargerIntensityR = rr.senseCharger(registryPassives)
         rr.transferFunction(chargerIntensityL, chargerIntensityR)
         rr.move(canvas, registryPassives, 1.0)
-        registryPassives = rr.collectDirt(canvas, registryPassives)
-    canvas.after(50, moveIt, canvas, registryActives, registryPassives)
+        registryPassives = rr.collectDirt(canvas, registryPassives, count)
+        print(count.dirtCollected)
+    canvas.after(50, moveIt, canvas, registryActives, registryPassives, count)
 
 
 def main():
     window = tk.Tk()
     canvas = initialise(window)
-    registryActives, registryPassives = register(canvas)
-    moveIt(canvas, registryActives, registryPassives)
+    registryActives, registryPassives, count = register(canvas)
+    moveIt(canvas, registryActives, registryPassives, count)
     window.mainloop()
 
 
