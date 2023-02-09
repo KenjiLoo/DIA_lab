@@ -3,115 +3,116 @@ import random
 import math
 import numpy as np
 
-class Bot():
 
-    def __init__(self,namep):
-        self.x = random.randint(100,900)
-        self.y = random.randint(100,900)
-        self.theta = random.uniform(0.0,2.0*math.pi)
-        #self.theta = 0
+class Bot:
+
+    def __init__(self, namep, canvasp):
+        self.x = random.randint(100, 900)
+        self.y = random.randint(100, 900)
+        self.theta = random.uniform(0.0, 2.0 * math.pi)
+        # self.theta = 0
         self.name = namep
-        self.ll = 60 #axle width
+        self.ll = 60  # axle width
         self.vl = 0.0
         self.vr = 0.0
+        self.battery = 1000
+        self.turning = 0
+        self.moving = random.randrange(50, 100)
+        self.currentlyTurning = False
+        self.canvas = canvasp
 
-        #battery life attribute
-        self.batteryLevel = 20000 # -1 for every 1 movement
-
-        self.timeSinceLastTurn = 0
-        self.timeToTurn = -999
-
-
-    def draw(self,canvas):
-        points = [ (self.x + 30*math.sin(self.theta)) - 30*math.sin((math.pi/2.0)-self.theta), \
-                   (self.y - 30*math.cos(self.theta)) - 30*math.cos((math.pi/2.0)-self.theta), \
-                   (self.x - 30*math.sin(self.theta)) - 30*math.sin((math.pi/2.0)-self.theta), \
-                   (self.y + 30*math.cos(self.theta)) - 30*math.cos((math.pi/2.0)-self.theta), \
-                   (self.x - 30*math.sin(self.theta)) + 30*math.sin((math.pi/2.0)-self.theta), \
-                   (self.y + 30*math.cos(self.theta)) + 30*math.cos((math.pi/2.0)-self.theta), \
-                   (self.x + 30*math.sin(self.theta)) + 30*math.sin((math.pi/2.0)-self.theta), \
-                   (self.y - 30*math.cos(self.theta)) + 30*math.cos((math.pi/2.0)-self.theta)  \
-                ]
+    def draw(self, canvas):
+        points = [(self.x + 30 * math.sin(self.theta)) - 30 * math.sin((math.pi / 2.0) - self.theta), \
+                  (self.y - 30 * math.cos(self.theta)) - 30 * math.cos((math.pi / 2.0) - self.theta), \
+                  (self.x - 30 * math.sin(self.theta)) - 30 * math.sin((math.pi / 2.0) - self.theta), \
+                  (self.y + 30 * math.cos(self.theta)) - 30 * math.cos((math.pi / 2.0) - self.theta), \
+                  (self.x - 30 * math.sin(self.theta)) + 30 * math.sin((math.pi / 2.0) - self.theta), \
+                  (self.y + 30 * math.cos(self.theta)) + 30 * math.cos((math.pi / 2.0) - self.theta), \
+                  (self.x + 30 * math.sin(self.theta)) + 30 * math.sin((math.pi / 2.0) - self.theta), \
+                  (self.y - 30 * math.cos(self.theta)) + 30 * math.cos((math.pi / 2.0) - self.theta) \
+                  ]
         canvas.create_polygon(points, fill="blue", tags=self.name)
 
-        self.sensorPositions = [ (self.x + 20*math.sin(self.theta)) + 30*math.sin((math.pi/2.0)-self.theta), \
-                                 (self.y - 20*math.cos(self.theta)) + 30*math.cos((math.pi/2.0)-self.theta), \
-                                 (self.x - 20*math.sin(self.theta)) + 30*math.sin((math.pi/2.0)-self.theta), \
-                                 (self.y + 20*math.cos(self.theta)) + 30*math.cos((math.pi/2.0)-self.theta)  \
-                            ]
+        self.sensorPositions = [(self.x + 20 * math.sin(self.theta)) + 30 * math.sin((math.pi / 2.0) - self.theta), \
+                                (self.y - 20 * math.cos(self.theta)) + 30 * math.cos((math.pi / 2.0) - self.theta), \
+                                (self.x - 20 * math.sin(self.theta)) + 30 * math.sin((math.pi / 2.0) - self.theta), \
+                                (self.y + 20 * math.cos(self.theta)) + 30 * math.cos((math.pi / 2.0) - self.theta) \
+                                ]
 
         centre1PosX = self.x
         centre1PosY = self.y
-        canvas.create_oval(centre1PosX-8,centre1PosY-8,\
-                           centre1PosX+8,centre1PosY+8,\
-                           fill="gold",tags=self.name)
+        canvas.create_oval(centre1PosX - 15, centre1PosY - 15, \
+                           centre1PosX + 15, centre1PosY + 15, \
+                           fill="gold", tags=self.name)
+        canvas.create_text(self.x, self.y, text=str(self.battery), tags=self.name)
 
-        wheel1PosX = self.x - 30*math.sin(self.theta)
-        wheel1PosY = self.y + 30*math.cos(self.theta)
-        canvas.create_oval(wheel1PosX-3,wheel1PosY-3,\
-                                         wheel1PosX+3,wheel1PosY+3,\
-                                         fill="red",tags=self.name)
+        wheel1PosX = self.x - 30 * math.sin(self.theta)
+        wheel1PosY = self.y + 30 * math.cos(self.theta)
+        canvas.create_oval(wheel1PosX - 3, wheel1PosY - 3, \
+                           wheel1PosX + 3, wheel1PosY + 3, \
+                           fill="red", tags=self.name)
 
-        wheel2PosX = self.x + 30*math.sin(self.theta)
-        wheel2PosY = self.y - 30*math.cos(self.theta)
-        canvas.create_oval(wheel2PosX-3,wheel2PosY-3,\
-                                         wheel2PosX+3,wheel2PosY+3,\
-                                         fill="green",tags=self.name)
+        wheel2PosX = self.x + 30 * math.sin(self.theta)
+        wheel2PosY = self.y - 30 * math.cos(self.theta)
+        canvas.create_oval(wheel2PosX - 3, wheel2PosY - 3, \
+                           wheel2PosX + 3, wheel2PosY + 3, \
+                           fill="green", tags=self.name)
 
         sensor1PosX = self.sensorPositions[0]
         sensor1PosY = self.sensorPositions[1]
         sensor2PosX = self.sensorPositions[2]
         sensor2PosY = self.sensorPositions[3]
-        canvas.create_oval(sensor1PosX-3,sensor1PosY-3, \
-                           sensor1PosX+3,sensor1PosY+3, \
-                           fill="yellow",tags=self.name)
-        canvas.create_oval(sensor2PosX-3,sensor2PosY-3, \
-                           sensor2PosX+3,sensor2PosY+3, \
-                           fill="yellow",tags=self.name)
+        canvas.create_oval(sensor1PosX - 3, sensor1PosY - 3, \
+                           sensor1PosX + 3, sensor1PosY + 3, \
+                           fill="yellow", tags=self.name)
+        canvas.create_oval(sensor2PosX - 3, sensor2PosY - 3, \
+                           sensor2PosX + 3, sensor2PosY + 3, \
+                           fill="yellow", tags=self.name)
 
     # cf. Dudek and Jenkin, Computational Principles of Mobile Robotics
-    def move(self,canvas,dt):
+    def move(self, canvas, registryPassives, dt):
+        if self.battery > 0:
+            self.battery -= 1
+        if self.battery == 0:
+            self.vl = 0
+            self.vr = 0
+        for rr in registryPassives:
+            if isinstance(rr, Charger) and self.distanceTo(rr) < 80:
+                self.battery += 10
 
-        self.batteryLevel -= 1
-        if self.vl==self.vr:
+        if self.vl == self.vr:
             R = 0
         else:
-            R = (self.ll/2.0)*((self.vr+self.vl)/(self.vl-self.vr))
-        omega = (self.vl-self.vr)/self.ll
-        ICCx = self.x-R*math.sin(self.theta) #instantaneous centre of curvature
-        ICCy = self.y+R*math.cos(self.theta)
-        m = np.matrix( [ [math.cos(omega*dt), -math.sin(omega*dt), 0], \
-                        [math.sin(omega*dt), math.cos(omega*dt), 0],  \
-                        [0,0,1] ] )
-        v1 = np.matrix([[self.x-ICCx],[self.y-ICCy],[self.theta]])
-        v2 = np.matrix([[ICCx],[ICCy],[omega*dt]])
-        newv = np.add(np.dot(m,v1),v2)
+            R = (self.ll / 2.0) * ((self.vr + self.vl) / (self.vl - self.vr))
+        omega = (self.vl - self.vr) / self.ll
+        ICCx = self.x - R * math.sin(self.theta)  # instantaneous centre of curvature
+        ICCy = self.y + R * math.cos(self.theta)
+        m = np.matrix([[math.cos(omega * dt), -math.sin(omega * dt), 0], \
+                       [math.sin(omega * dt), math.cos(omega * dt), 0], \
+                       [0, 0, 1]])
+        v1 = np.matrix([[self.x - ICCx], [self.y - ICCy], [self.theta]])
+        v2 = np.matrix([[ICCx], [ICCy], [omega * dt]])
+        newv = np.add(np.dot(m, v1), v2)
         newX = newv.item(0)
         newY = newv.item(1)
         newTheta = newv.item(2)
-        newTheta = newTheta%(2.0*math.pi) #make sure angle doesn't go outside [0.0,2*pi)
+        newTheta = newTheta % (2.0 * math.pi)  # make sure angle doesn't go outside [0.0,2*pi)
         self.x = newX
         self.y = newY
         self.theta = newTheta
-        if self.vl==self.vr: # straight line movement
-            self.x += self.vr*math.cos(self.theta) #vr wlog
-            self.y += self.vr*math.sin(self.theta)
+        if self.vl == self.vr:  # straight line movement
+            self.x += self.vr * math.cos(self.theta)  # vr wlog
+            self.y += self.vr * math.sin(self.theta)
+        if self.x < 0.0:
+            self.x = 999.0
+        if self.x > 1000.0:
+            self.x = 0.0
+        if self.y < 0.0:
+            self.y = 999.0
+        if self.y > 1000.0:
+            self.y = 0.0
         canvas.delete(self.name)
         self.draw(canvas)
-
-    def senseLight(self, registryPassives):
-        lightL = 0.0
-        lightR = 0.0
-        for pp in registryPassives:
-            if isinstance(pp,Lamp):
-                lx,ly = pp.getLocation()
-                distanceL = math.sqrt( (lx-self.sensorPositions[0])*(lx-self.sensorPositions[0]) + \
-                                       (ly-self.sensorPositions[1])*(ly-self.sensorPositions[1]) )
-                distanceR = math.sqrt( (lx-self.sensorPositions[2])*(lx-self.sensorPositions[2]) + \
-                                       (ly-self.sensorPositions[3])*(ly-self.sensorPositions[3]) )
-                lightL += 200000/(distanceL*distanceL)
-                lightR += 200000/(distanceR*distanceR)
-        return lightL, lightR
 
     def senseCharger(self, registryPassives):
         lightL = 0.0
@@ -127,131 +128,155 @@ class Bot():
                 lightR += 200000 / (distanceR * distanceR)
         return lightL, lightR
 
-    def transferFunction(self, lightL, lightR, chargeL, chargeR):
-        # wheels not moving - no movement
-        # conditions to avoid light:
-        # if lightL > lightR and self.batteryLevel > 6:
-        #     self.vl = 5
-        #     self.vr = 1
-        #     self.batteryLevel -= self.vl + self.vr
-        # elif lightR > lightL and self.batteryLevel > 6:
-        #     self.vl = 1
-        #     self.vr = 5
-        #     self.batteryLevel -= self.vl + self.vr
-        # elif self.batteryLevel < 6:
-        #     self.vl = 0
-        #     self.vr = 0
+    def distanceTo(self, obj):
+        xx, yy = obj.getLocation()
+        return math.sqrt(math.pow(self.x - xx, 2) + math.pow(self.y - yy, 2))
 
-        #wander and turn, lecturer's solution:,
-        # if self.timeSinceLastTurn<30:
-        #     self.timeSinceLastTurn += 1
-        # elif self.timeSinceLastTurn==30:
-        #     self.timeSinceLastTurn += 1
-        #     self.timeSinceLastTurn += 1
-        #     self.timeToTurn = random.randrange(5,30)
-        #     self.vl = 5.0
-        #     self.vr = -5.0
-        # elif self.timeToTurn>0:
-        #     self.timeSinceLastTurn += 1
-        #     self.timeSinceLastTurn += 1
-        #     self.timeToTurn -= 1
-        # elif self.timeToTurn==0:
-        #     self.timeSinceLastTurn += 1
-        #     self.timeSinceLastTurn = 0
-        #     self.vl = 5.0
-        #     self.vr = 5.0
+    def collectDirt(self, canvas, registryPassives):
+        toDelete = []
+        for idx, rr in enumerate(registryPassives):
+            if isinstance(rr, Dirt):
+                if self.distanceTo(rr) < 30:
+                    canvas.delete(rr.name)
+                    toDelete.append(idx)
+        for ii in sorted(toDelete, reverse=True):
+            del registryPassives[ii]
+        return registryPassives
 
-        #simple speed limit - could be improved
-        # if self.vl>10.0:
-        #     self.vl = 10.0
-        # if self.vl<-10.0:
-        #     self.vl = -10.0
-        # if self.vr>10.0:
-        #     self.vr = 10.0
-        # if self.vr<10.0:
-        #     self.vr = -10.0
-
-        #newest solution
-        if self.batteryLevel >= 1000:
-            # background behavior - follow the light
-            self.vl = math.sqrt(lightR) * 5
-            self.vr = math.sqrt(lightL) * 5
-        if self.batteryLevel < 1000:
-            # move towards charger
-            self.vl = math.sqrt(chargeR) * 5
-            self.vr = math.sqrt(chargeL) * 5
-        if chargeR + chargeL > 400 and self.batteryLevel < 1500:
-            # near charger: stop and wait to charge
-            self.vl = 0
+    def transferFunction(self, chargerL, chargerR):
+        # wandering behaviour
+        if self.currentlyTurning == True:
+            self.vl = -2.0
+            self.vr = 2.0
+            self.turning -= 1
+        else:
+            self.vl = 5.0
+            self.vr = 5.0
+            self.moving -= 1
+        if self.moving == 0 and not self.currentlyTurning:
+            self.turning = random.randrange(20, 40)
+            self.currentlyTurning = True
+        if self.turning == 0 and self.currentlyTurning:
+            self.moving = random.randrange(50, 100)
+            self.currentlyTurning = False
+        # battery - these are later so they have priority
+        if self.battery < 600:
+            if chargerR > chargerL:
+                self.vl = 2.0
+                self.vr = -2.0
+            elif chargerR < chargerL:
+                self.vl = -2.0
+                self.vr = 2.0
+            if abs(chargerR - chargerL) < chargerL * 0.1:  # approximately the same
+                self.vl = 5.0
+                self.vr = 5.0
+            # self.vl = 5*math.sqrt(chargerR)
+            # self.vr = 5*math.sqrt(chargerL)
+        if chargerL + chargerR > 200 and self.battery < 1000:
+            self.vl = 0.0
+            self.vr = 0.0
 
 
-class Lamp():
-    def __init__(self,namep):
-        self.centreX = random.randint(100,900)
-        self.centreY = random.randint(100,900)
-        self.name = namep
-
-    def draw(self,canvas):
-        body = canvas.create_oval(self.centreX-10,self.centreY-10, \
-                                  self.centreX+10,self.centreY+10, \
-                                  fill="yellow",tags=self.name)
-
-    def getLocation(self):
-        return self.centreX, self.centreY
-
-
-class Charger():
+class Charger:
     def __init__(self, namep):
         self.centreX = random.randint(100, 900)
         self.centreY = random.randint(100, 900)
         self.name = namep
 
     def draw(self, canvas):
-        body = canvas.create_oval(self.centreX - 30, self.centreY - 10, \
+        body = canvas.create_oval(self.centreX - 10, self.centreY - 10, \
                                   self.centreX + 10, self.centreY + 10, \
-                                  fill="red", tags=self.name)
+                                  fill="gold", tags=self.name)
 
     def getLocation(self):
         return self.centreX, self.centreY
 
+
+class WiFiHub:
+    def __init__(self, namep, xp, yp):
+        self.centreX = xp
+        self.centreY = yp
+        self.name = namep
+
+    def draw(self, canvas):
+        body = canvas.create_oval(self.centreX - 10, self.centreY - 10, \
+                                  self.centreX + 10, self.centreY + 10, \
+                                  fill="purple", tags=self.name)
+
+    def getLocation(self):
+        return self.centreX, self.centreY
+
+
+class Dirt:
+    def __init__(self, namep):
+        self.centreX = random.randint(100, 900)
+        self.centreY = random.randint(100, 900)
+        self.name = namep
+
+    def draw(self, canvas):
+        body = canvas.create_oval(self.centreX - 1, self.centreY - 1, \
+                                  self.centreX + 1, self.centreY + 1, \
+                                  fill="grey", tags=self.name)
+
+    def getLocation(self):
+        return self.centreX, self.centreY
+
+
+def buttonClicked(x, y, registryActives):
+    for rr in registryActives:
+        if isinstance(rr, Bot):
+            rr.x = x
+            rr.y = y
+
+
 def initialise(window):
-    window.resizable(True ,True)
-    canvas = tk.Canvas(window,width=1000,height=1000)
+    window.resizable(False, False)
+    canvas = tk.Canvas(window, width=1000, height=1000)
     canvas.pack()
     return canvas
+
 
 def register(canvas):
     registryActives = []
     registryPassives = []
-    noOfBots = 10
-    noOfLights = 10
-    noOfChargers = 5
-    for i in range(0,noOfBots):
-        bot = Bot("Bot"+str(i))
+    noOfBots = 1
+    noOfDirt = 300
+    for i in range(0, noOfBots):
+        bot = Bot("Bot" + str(i), canvas)
         registryActives.append(bot)
         bot.draw(canvas)
-    for i in range(0,noOfLights):
-        lamp = Lamp("Lamp"+str(i))
-        registryPassives.append(lamp)
-        lamp.draw(canvas)
-    for i in range(0,noOfChargers):
-        charger = Charger("Charger"+str(i))
-        registryPassives.append(charger)
-        charger.draw(canvas)
+    charger = Charger("Charger")
+    registryPassives.append(charger)
+    charger.draw(canvas)
+    hub1 = WiFiHub("Hub1", 950, 50)
+    registryPassives.append(hub1)
+    hub1.draw(canvas)
+    hub2 = WiFiHub("Hub1", 50, 500)
+    registryPassives.append(hub2)
+    hub2.draw(canvas)
+    for i in range(0, noOfDirt):
+        dirt = Dirt("Dirt" + str(i))
+        registryPassives.append(dirt)
+        dirt.draw(canvas)
+    canvas.bind("<Button-1>", lambda event: buttonClicked(event.x, event.y, registryActives))
     return registryActives, registryPassives
 
-def moveIt(canvas,registryActives,registryPassives):
-    for rr in registryActives:
-        lightIntensityL, lightIntensityR = rr.senseLight(registryPassives)
-        rr.transferFunction(lightIntensityL, lightIntensityR)
-        rr.move(canvas,0.5)
-    canvas.after(50,moveIt,canvas,registryActives,registryPassives)
 
-def main()
+def moveIt(canvas, registryActives, registryPassives):
+    for rr in registryActives:
+        chargerIntensityL, chargerIntensityR = rr.senseCharger(registryPassives)
+        rr.transferFunction(chargerIntensityL, chargerIntensityR)
+        rr.move(canvas, registryPassives, 1.0)
+        registryPassives = rr.collectDirt(canvas, registryPassives)
+    canvas.after(50, moveIt, canvas, registryActives, registryPassives)
+
+
+def main():
     window = tk.Tk()
     canvas = initialise(window)
     registryActives, registryPassives = register(canvas)
-    moveIt(canvas,registryActives,registryPassives)
+    moveIt(canvas, registryActives, registryPassives)
     window.mainloop()
+
 
 main()
